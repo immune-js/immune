@@ -1,0 +1,32 @@
+{
+  "name": "immune",
+  "version": "0.1.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest src",
+    "test:watch": "jest src --watch",
+    "compile": "babel src --out-dir lib",
+    "prepublish": "npm run compile"
+  },
+  "author": "Patrik Hedman",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-template": "^6.26.0",
+    "jest": "^21.0.1"
+  },
+  "dependencies": {
+    "history": "^4.7.2",
+    "hyperapp-transitions": "^0.5.7",
+    "isomorphic-fetch": "^2.2.1",
+    "meteor-ejson": "^0.6.3",
+    "nanoid": "^0.2.0",
+    "node-fetch": "^1.7.3",
+    "path-to-regexp": "^2.0.0",
+    "picodom": "^0.1.0",
+    "xstream": "^10.9.0"
+  }
+}

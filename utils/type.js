@@ -1,0 +1,1 @@
+export { Type as default } from "../lib/utils/event-stream"

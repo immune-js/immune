@@ -1,0 +1,1 @@
+export { eventStream as default } from "../lib/utils/event-stream"
