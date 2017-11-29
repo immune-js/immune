@@ -18,8 +18,11 @@ import
 
 let history
 
-export const listen = (msg, config) => {
+const _createHistory = (config = {}) =>
   history = history || createHistory(config || {})
+
+export const listen = (msg, config) => {
+  _createHistory(config)
   
   let unlisten
   
@@ -33,33 +36,47 @@ export const listen = (msg, config) => {
   ), history.location), compareUrls), loc => msg(toLocation(loc)))
 }
 
+export const location =
+  Task((_, succeed) => { 
+    _createHistory()
+    succeed(toLocation(history.location)) 
+  })
+
 export const push = (path, context = {}) =>
-  Task((_, succeed) => 
-    (stringifyLocation(history.location) !== path && history.push(path, context), succeed())
-  )
+  Task((_, succeed) => {
+    _createHistory()
+    stringifyLocation(history.location) !== path && history.push(path, context)
+    succeed()
+  })
 
 export const replace = (path, context = {}) =>
-  Task((_, succeed) => 
-    (history.replace(path, context), succeed())
-  )
+  Task((_, succeed) => {
+    _createHistory()
+    history.replace(path, context)
+    succeed()
+  })
 
 
 export const forward = () =>
-  Task((_, succeed) => 
-    (history.forward(), succeed())
-  )
+  Task((_, succeed) => {
+    _createHistory()
+    history.forward()
+    succeed()
+  })
 
 export const back = () =>
-  Task((_, succeed) => 
-    (history.back(), succeed())
-  )
+  Task((_, succeed) => {
+    _createHistory()
+    history.back()
+    succeed()
+  })
 
 //******************************************************************************
 // Utils
 //******************************************************************************
 
-export const toLocation = ({ pathname, search, params = {}, hash }) => {
-  return createLocation(pathname, search, params, hash)
+export const toLocation = ({ pathname, search, hash }) => {
+  return createLocation(pathname, search, {}, hash)
 }
 
 const stringifyLocation = loc =>
@@ -68,4 +85,4 @@ const stringifyLocation = loc =>
 const compareUrls = (prev, next) => 
   stringifyLocation(prev) === stringifyLocation(next) && equals(prev.state || {}, next.state || {})
   
-export default { listen, push, replace, forward, back, toLocation }
+export default { listen, location, push, replace, forward, back, toLocation }

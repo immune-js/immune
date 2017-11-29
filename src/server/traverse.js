@@ -1,5 +1,6 @@
 import
-  { Task
+  { Union
+  , Task
   , maybe
   , andThen
   , map
@@ -11,13 +12,14 @@ import
 
 import
   { Component
+  , AsyncComponent
   , MountComponent
   , UnmountComponent
   , step
   } from "../ui/component"
 
 const executeEffects = (component, appState, path, effects, context) => 
-  andThen(Task.parallel(effects), msgs => {
+  andThen(Task.parallel(effects.map(eff => eff instanceof Union ? Task.of(eff) : eff)), msgs => {
     const next = msgs.reduce((current, msg) => {
       if (!msg) return current
       
@@ -42,6 +44,11 @@ const mountComponent = (Component, appState, path, context) => {
 }
 
 const traverseVdomTree = (vnode, state, path, context, html = "") => {
+  if (vnode instanceof AsyncComponent)
+    return andThen(vnode.component, asyncComp =>
+      traverseVdomTree(asyncComp["default"]((path[0] === "application" ? path.slice(1, path.length) : path).concat(vnode.path), vnode.props), state, path, context, html)
+    )
+  
   if (vnode instanceof Component)
     return andThen(mountComponent(vnode, state, path.concat(vnode.path), context), nextState => {
       const nextVdom = vnode.component.view(

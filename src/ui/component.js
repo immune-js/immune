@@ -16,12 +16,19 @@ export const Component = Type("Component",
   }
 )
 
+export const AsyncComponent = Type("AsyncComponent",
+  { component : Task
+  , path      : Array
+  , props     : Object
+  }
+)
+
 export const MountComponent   = Type("MountComponent"   , { path: Array })
 export const UnmountComponent = Type("UnmountComponent" , { path: Array })
 
 export const step = (state, effects = []) => ({ state, effects })
 
-export default comp => {
+export const component = comp => {
   const instance = (path, props = {}) =>
     Component(comp, Array.isArray(path) ? path : [path], props)
   
@@ -47,3 +54,13 @@ export default comp => {
   
   return instance
 }
+
+component.async = (task, path, props = {}) =>
+  AsyncComponent(task, Array.isArray(path) ? path : [path], props)
+
+// component.async = (componentPath, statePath, props = {}) => 
+//   Task((fail, succeed) => {
+//     import(componentPath).then(comp =>
+//       succeed(component(statePath, props))
+//     )
+//   })

@@ -1,4 +1,5 @@
 var babelTemplate = require("babel-template")
+var generate      = require("babel-generator")
 var path          = require("path")
 
 const IMMUNE_PATH = "immune"
@@ -109,6 +110,10 @@ var utils =
   , evolve        : true
   }
 
+const buildImportTask = babelTemplate(`
+
+`)
+
 module.exports = function (babel) {
   var t = babel.types
 
@@ -161,6 +166,9 @@ module.exports = function (babel) {
         },
 
         exit: (path, env) => {
+          const imports       = env.file.get("bind-imports")
+          const uniqueImports = imports.filter((module, idx) => imports.indexOf(module) === idx)
+          
           if(env.file.get("bind-imports").length)
             path.node.body = [
               t.importDeclaration(env.file.get("bind-imports").map(function(name) {
@@ -200,8 +208,32 @@ module.exports = function (babel) {
 
         var args;
 
-        if ((args = path.node.arguments.filter(function (arg) { return arg.name === "__" })).length)
-          path.replaceWith(curry(t, path.node, args, path.scope))
+        if ((args = node.arguments.filter(function (arg) { return arg.name === "__" })).length)
+          path.replaceWith(curry(t, node, args, path.scope))
+        
+        if (node.callee.name === "async")
+          console.log("async component!!!")
+        
+        if (node.callee.object && node.callee.property) {
+          if (node.callee.object.name === "component" && node.callee.property.name === "async") {
+            if (node.arguments[0] && node.arguments[0].type === "StringLiteral") {
+              env.file.set("bind-imports", env.file.get("bind-imports").concat("Task"))
+              const dynamicImport = t.callExpression(t.identifier("Task"), 
+                [ t.functionExpression(t.identifier("dynamicImport"), [t.identifier("fail"), t.identifier("succeed")], t.blockStatement(
+                    [ t.returnStatement(
+                        t.callExpression(
+                          t.memberExpression(t.callExpression(t.identifier("import"), [ node.arguments[0] ]), t.identifier('then')),
+                          [ t.identifier("succeed") ]
+                        )
+                      )
+                    ]
+                  ))
+                ]
+              )
+              path.replaceWith(t.callExpression(node.callee, [dynamicImport, ...node.arguments.slice(1, node.arguments.length)]))
+            }
+          }
+        }
       },
 
       BindExpression: (path, env) => {

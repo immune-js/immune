@@ -98,6 +98,9 @@ export const Union = (name, spec) => {
       this[IMMUNE_ARGS_SYM] = args
     }
     
+    _Case[ IMMUNE_NAME_SYM ] = `${name}.${key}`
+    _Case[ IMMUNE_ARGS_SYM ] = spec[key]
+    
     union[key] = _Case
     
     try {

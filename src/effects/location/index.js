@@ -19,5 +19,5 @@ const parseQuery = (qs = "") =>
     : qs.length ? qs.replace(/^\?/, "").split(/&/g).reduce((acc, kvp) => { const [k, v] = kvp.split("="); acc[k] = v; return acc }, {}) : {}
 
 export const createLocation = (path, search, params, hash = "") =>
-  Location(path, parseQuery(search), params, search, hash)
+  (console.log("path:", path, "search:", search, "params:", params, "hash:", hash), Location(path, parseQuery(search), params || {}, search, hash))
 

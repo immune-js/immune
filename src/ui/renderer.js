@@ -6,6 +6,7 @@ import
   { Component
   , MountComponent
   , UnmountComponent
+  , AsyncComponent
   } from "./component"
 
 import
@@ -14,6 +15,7 @@ import
 
 import
   { Task
+  , Union
   , None
   , fold
   , foldl
@@ -65,7 +67,8 @@ const viewActions = (component, path, state) => {
 
 const executeEffects = (component, effects, path, state) => {
   effects.forEach(eff => {
-    eff.fork(err => console.error(err), msg => {
+    const task = eff instanceof Union ? Task.of(eff) : eff
+    task.fork(err => console.error(err), msg => {
       if (msg == null)
         return
       
@@ -120,7 +123,23 @@ const isMounted = path => {
   return !!mountedComponents[path.join("-")]
 }
 
+const resolvedPaths = {}
+
 const traverse = (comp, path, state) => {
+  if (comp instanceof AsyncComponent) {
+    const resolvedComp = resolvedPaths[path.concat(comp.path).join("-")]
+    console.log("resolvedPaths", resolvedPaths)
+    if (!resolvedComp) {
+      const res = comp.component.fork(() => {}, asyncComp => {
+        resolvedPaths[path.concat(comp.path).join("-")] = { comp: asyncComp["default"], props: comp.props.props }
+        AppState.update(state => state)
+      })
+      
+      return comp.props.loader() || { tag: "div", data: {}, children: ["Loading..."] }
+    }
+    
+    comp = resolvedComp.comp((path[0] === "application" ? path.slice(1, path.length) : path).concat(comp.path), resolvedComp.props)
+  }
   
   if (comp instanceof Component) {
     const componentPath      = path.concat(comp.path)
@@ -140,9 +159,11 @@ const traverse = (comp, path, state) => {
         )
       },
       () => {
-        mountComponent(comp.component, componentPath)
-        
         const { state: initState, effects: initEffects } = comp.component.init(props)
+        
+        AppState.assocIn(componentPath, initState)
+        
+        mountComponent(comp.component, componentPath)
         
         initEffects.length && executeEffects(comp.component, initEffects, componentPath, initState)
         return comp.component.view(
