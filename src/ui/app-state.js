@@ -5,10 +5,8 @@ import
 
 import EJSON from "meteor-ejson"
 
-let isUpdating = false
-
 export const AppState = 
-  { state     : {} //typeof(APPLICATION_STATE) !== "undefined" ? EJSON.parse(APPLICATION_STATE) : {}
+  { state     : {}
   , listeners : []
   , subscribe : listener => (AppState.listeners.push(listener))
   , update    : f => {
@@ -20,13 +18,9 @@ export const AppState =
       
       AppState.state = f(AppState.state)
       
-      if (!isUpdating) {
-        isUpdating = true
-        requestAnimationFrame(() => {
-          AppState.listeners.forEach(f => f(AppState.state))
-          isUpdating = false
-        })
-      }
+      requestAnimationFrame(() => 
+        AppState.listeners.forEach(f => f(AppState.state))
+      )
     }
     
   , assocIn : (path, nextState) => 

@@ -193,22 +193,28 @@ const traverse = (comp, path, state) => {
   )
 }
 
-let isRendering = false
+let isRendering     = false
 
 export default target => {
   let { element, oldNode } = hydrate(target)
   
-  return (state, comp) => {
+  const render = (state, comp) => {
     const domTree = traverse(comp, [], state)
     
-    requestAnimationFrame(() => {
-      element = patch
-        ( oldNode
-        , (oldNode = domTree)
-        , element
-        , target
-        )
-        isRendering = false
-    })
+    if (!isRendering) {
+      isRendering = true
+      requestAnimationFrame(() => {
+        console.log("rendering...")
+        element = patch
+          ( oldNode
+          , (oldNode = domTree)
+          , element
+          , target
+          )
+          isRendering = false
+      })
+    }
   }
+  
+  return render
 }
