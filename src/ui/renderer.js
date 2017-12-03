@@ -68,6 +68,10 @@ const viewActions = (component, path, state) => {
 const executeEffects = (component, effects, path, state) => {
   effects.forEach(eff => {
     const task = eff instanceof Union ? Task.of(eff) : eff
+    
+    if (task === Task.none)
+      return
+    
     task.fork(err => console.error(err), msg => {
       if (msg == null)
         return
