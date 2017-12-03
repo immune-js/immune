@@ -128,7 +128,7 @@ const resolvedPaths = {}
 const traverse = (comp, path, state) => {
   if (comp instanceof AsyncComponent) {
     const resolvedComp = resolvedPaths[path.concat(comp.path).join("-")]
-    console.log("resolvedPaths", resolvedPaths)
+    
     if (!resolvedComp) {
       const res = comp.component.fork(() => {}, asyncComp => {
         resolvedPaths[path.concat(comp.path).join("-")] = { comp: asyncComp["default"], props: comp.props.props }
