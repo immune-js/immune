@@ -11,6 +11,9 @@ import
   } from "./component"
 
 export default (sel, props, children) => {
+  if (sel == null)
+    return { tag: null, data: {}, children: [] }
+  
   if (children == null) {
     if (Array.isArray(props) || typeof((props || {}).tag) === "string" || typeof(props) === "string" || typeof((props || {}).tag) === "number" || (props && props instanceof Component)) {
       children = props
