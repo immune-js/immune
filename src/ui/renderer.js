@@ -135,7 +135,7 @@ const traverse = (comp, path, state) => {
         AppState.update(state => state)
       })
       
-      return comp.props.loader() || { tag: "div", data: {}, children: ["Loading..."] }
+      return typeof(comp.props.loader) == "function" ? comp.props.loader() : comp.props.loader == null ? { tag: null, data: {}, children: [] } : comp.props.loader
     }
     
     comp = resolvedComp.comp((path[0] === "application" ? path.slice(1, path.length) : path).concat(comp.path), resolvedComp.props)
