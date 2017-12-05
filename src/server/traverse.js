@@ -1,7 +1,6 @@
 import
   { Union
   , Task
-  , maybe
   , andThen
   , map
   , foldl
@@ -38,7 +37,7 @@ const executeEffects = (component, appState, path, effects, context) =>
   })
 
 const mountComponent = (Component, appState, path, context) => {
-  const { state, effects } = Component.component.init({ context: maybe(context), ...Component.props })
+  const { state, effects } = Component.component.init({ context: context, ...Component.props })
   
   return executeEffects(Component.component, assocIn(appState, path, state), path, effects, context)
 }
@@ -54,7 +53,7 @@ const traverseVdomTree = (vnode, state, path, context, html = "") => {
       const nextVdom = vnode.component.view(
         { state   : getIn_(nextState, path.concat(vnode.path))
         , actions : {}
-        , props   : { context: maybe(context), ...vnode.props } 
+        , props   : { context: context, ...vnode.props } 
         }
       )
       return traverseVdomTree(nextVdom, nextState, path.concat(vnode.path), context, html)

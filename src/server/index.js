@@ -24,6 +24,7 @@ export default (App, { template = "", tags }) => {
     
     return Task.toPromise(andThen(traverse(app, Some(context)), ([state, html]) => Task.of(
       template
+        .replace(tags.title , context.state.title)
         .replace(tags.lang  , lang)
         .replace(tags.dir   , dir)
         .replace(tags.state , "<script type='text/javascript'>window.APPLICATION_STATE = '" + EJSON.stringify(state) +  "'</script>")
