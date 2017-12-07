@@ -1,3 +1,5 @@
+import nanoid from "nanoid"
+
 import 
   { patch
   } from "picodom"
@@ -109,7 +111,11 @@ const mountComponent = (component, path) => {
     })
   }
   
-  mountedComponents[path.join("-")] = { component, subscriptions }
+  const componentData = { component, subscriptions, key: nanoid() }
+  
+  mountedComponents[path.join("-")] = componentData
+  
+  return componentData
 }
 
 const unmountComponent = path => {
@@ -129,6 +135,34 @@ const isMounted = path => {
 
 const resolvedPaths = {}
 
+export const renderView = (component, state, path, props) => {
+  const { key } = mountedComponents[path.join("-")]
+  
+  const view = component.view(
+    { state   : state
+    , actions : viewActions(component, path, state)
+    , props
+    }
+  )
+  
+  view.data.key = view.data.key || key
+  
+  const oldOnCreate = view.data.oncreate
+  
+  view.data.oncreate = (...args) => {
+    if (typeof(component.mount) === "function") {
+      const { state: mountState, effects: mountEffects } = component.mount(state, None())
+      AppState.assocIn(path, mountState)
+      executeEffects(component, mountEffects, path, mountState)
+    }
+    
+    if (typeof (oldOnCreate) === "function")
+      return oldOnCreate(...args)
+  }
+  
+  return view
+}
+
 const traverse = (comp, path, state) => {
   if (comp instanceof AsyncComponent) {
     const resolvedComp = resolvedPaths[path.concat(comp.path).join("-")]
@@ -146,21 +180,16 @@ const traverse = (comp, path, state) => {
   }
   
   if (comp instanceof Component) {
-    const componentPath      = path.concat(comp.path)
-    const componentState     = getIn(state, componentPath)
-    const props              = { context: None(), ...comp.props }
+    const componentPath  = path.concat(comp.path)
+    const componentState = getIn(state, componentPath)
+    const props          = { context: None(), ...comp.props }
     
     const view = fold(componentState,
       state => {
         if (!isMounted(componentPath)) 
           mountComponent(comp.component, componentPath)
         
-        return comp.component.view(
-          { state   : state
-          , actions : viewActions(comp.component, componentPath, state)
-          , props
-          }
-        )
+        return renderView(comp.component, state, componentPath, props)
       },
       () => {
         const { state: initState, effects: initEffects } = comp.component.init(props)
@@ -170,12 +199,8 @@ const traverse = (comp, path, state) => {
         mountComponent(comp.component, componentPath)
         
         initEffects.length && executeEffects(comp.component, initEffects, componentPath, initState)
-        return comp.component.view(
-          { state   : initState
-          , actions : viewActions(comp.component, componentPath, initState)
-          , props
-          }
-        )
+        
+        return renderView(comp.component, initState, componentPath, props)
       }
     )
     
